@@ -19,6 +19,7 @@ class InvitationManager(models.Manager):
 		"""Handle code creation."""
 		pool = ascii_uppercase + digits + '.-'
 		code = kwargs.get('code', ''.join(random.choices(pool, k=self.CODE_LENGTH))) #Toma nuestro codigo si no existe lo crea
+		#kwargs.get('code', '') #si por defecto no toma nuestro codigo lo crea
 		while self.filter(code=code).exists():
 			code = ''.join(random.choices(pool, k=self.CODE_LENGTH))
 		kwargs['code'] = code 

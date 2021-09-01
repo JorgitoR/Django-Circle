@@ -5,6 +5,7 @@ from django.contrib import admin
 
 # Models
 from cride.circles.models.circles import Circle
+from cride.circles.models.membership import MemberShip
 
 @admin.register(Circle)
 class CircleAdmin(admin.ModelAdmin):
@@ -25,3 +26,14 @@ class CircleAdmin(admin.ModelAdmin):
 		'verified',
 		'is_limited'
 	)
+
+@admin.register(MemberShip)
+class MemberAdmin(admin.ModelAdmin):
+	"""MemberShip Admin."""
+
+	list_display = [
+		'user',
+		'circle'
+	]
+
+	search_fields = ('user', 'profile')

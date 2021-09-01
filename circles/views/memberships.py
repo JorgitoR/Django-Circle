@@ -49,7 +49,8 @@ class MembershipViewSet(mixins.ListModelMixin,
 	#{{host}}/circles/slug_name/members/
 	def get_object(self):
 		"""Return the circle member by using the user's username."""
-		import pdb; pdb.set_trace()
+		#import pdb; pdb.set_trace() #cuando llega al debugger self.args or self.kwargs
+
 		return get_object_or_404(
 			MemberShip,
 			user__username=self.kwargs['pk'],
