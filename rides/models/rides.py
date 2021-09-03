@@ -29,3 +29,14 @@ class Ride(CRideModel):
 		default=True,
 		help_text='Used for disabling the ride or marking it as finished'
 	)
+
+	def __str__(self):
+		"""Return ride details."""
+		return '{_from} to {to} / {day} {i_time} - {f_time}'.format(
+			_from= self.departure_locaion,
+			to= self.arrival_location,
+			day = self.departure_date.strftime('%a %d, %b'),
+			i_time = self.departure_date.strftime('%I:%M %p'),
+			f_time = self.arrival_date.strftime('%I:%M %p')
+
+		)
