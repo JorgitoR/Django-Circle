@@ -6,6 +6,7 @@ from django.contrib import admin
 # Models
 from cride.circles.models.circles import Circle
 from cride.circles.models.membership import MemberShip
+from cride.circles.models.invitations import Invitation
 
 @admin.register(Circle)
 class CircleAdmin(admin.ModelAdmin):
@@ -37,3 +38,12 @@ class MemberAdmin(admin.ModelAdmin):
 	]
 
 	search_fields = ('user', 'profile')
+
+
+@admin.register(Invitation)
+class InvitationAdmin(admin.ModelAdmin):
+	"""Invitation code."""
+
+	list_display = [
+		'code', 'circle', 'issued_by', 'used_by', 
+	]

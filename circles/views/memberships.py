@@ -4,6 +4,7 @@
 from rest_framework import mixins, viewsets, status
 from rest_framework.decorators import action # esto es un decorador
 from rest_framework.generics import get_object_or_404
+from rest_framework.response import Response
 
 # Serializers
 from cride.circles.serializers.membership import MembershipModelSerializer, AddMemberSerializer
@@ -13,7 +14,7 @@ from rest_framework.permissions import IsAuthenticated
 from cride.circles.permissions.memberships import IsActiveCircleMember, IsSelfMember
 
 # Models
-from cride.circles.models import Circle, MemberShip
+from cride.circles.models import Circle, MemberShip, Invitation
 
 class MembershipViewSet(mixins.ListModelMixin,
 						mixins.CreateModelMixin,
@@ -66,6 +67,7 @@ class MembershipViewSet(mixins.ListModelMixin,
 
 
 	#{{host}}/circles/slug_name/members/freddier/invitations/
+	@action(detail=True, methods=['get'])
 	def invitations(self, request, *args, **kwargs):
 		"""Retrieve a member's invitations breakdown.
 
@@ -89,7 +91,7 @@ class MembershipViewSet(mixins.ListModelMixin,
 			used=False
 		).values_list('code')
 
-		diff = member.remaining_invitation - len(unused_invitations)
+		diff = member.remaining_invitation - len(unused_invitations) #diff means diference
 
 		invitations = [x[0] for x in unused_invitations]
 		for i in range(0, diff):
@@ -98,10 +100,9 @@ class MembershipViewSet(mixins.ListModelMixin,
 				Invitation.objects.create(
 					issued_by=request.user,
 					circle=self.circle
-				).code
+				).code #no queremos agregar una lista de string, solo queremos enviar el code
 
 			)
-
 
 		data = {
 			'used_invitations': MembershipModelSerializer(invited_members, many=True).data,
@@ -123,10 +124,11 @@ class MembershipViewSet(mixins.ListModelMixin,
 
 	def create(self, request, *args, **kwargs):
 		"""Handle member creation from invitation code."""
+		print(request)
 		serializer = AddMemberSerializer(
-			data = request.data,
-			context ={'circle':self.circle, 'request':request}
-		)
+        	data=request.data,
+        	context={'circle': self.circle, 'request': request}
+     	)
 		serializer.is_valid(raise_exception=True)
 		member = serializer.save()
 

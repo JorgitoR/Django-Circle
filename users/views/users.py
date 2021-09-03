@@ -31,8 +31,6 @@ from cride.users.serializers.profile import ProfileModelSerializer
 from cride.users.models import User
 
 
-
-
 class UserViewSet(mixins.RetrieveModelMixin,
 				mixins.UpdateModelMixin,
 				viewsets.GenericViewSet):
@@ -86,6 +84,13 @@ class UserViewSet(mixins.RetrieveModelMixin,
 		serializer.save()
 		data ={'message':'Congratulation, account active'}
 		return Response(data, status=status.HTTP_200_OK)
+
+	@action(detail=True, methods=['get'])
+	def type_user(self, request, *args, **kwargs):
+
+		user = self.get_object()
+		type_user = user.is_verified
+		return Response(type_user)
 
 	@action(detail=True, methods=['put', 'patch'])
 	def profile(self, request, *args, **kwargs):

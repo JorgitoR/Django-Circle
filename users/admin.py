@@ -17,9 +17,10 @@ class CustomUserAdmin(UserAdmin):
 class ProfileAdmin(admin.ModelAdmin):
 	"""Profile model Admin"""
 
-	list_display = ('users', 'reputation', 'rides_taken', 'rides_offered')
-	search_fields = ('users__username', 'users__email')
+	list_display = ('user', 'reputation', 'rides_taken', 'rides_offered')
+	search_fields = ('user__username', 'user__email')
 	list_filter =('reputation',)
 
 
 admin.site.register(User, UserAdmin)
+admin.site.register(Profile, ProfileAdmin)

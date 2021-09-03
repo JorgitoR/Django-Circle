@@ -21,12 +21,14 @@ class Invitation(CRideModel):
 
 	code = models.CharField(max_length=50, unique=True)
 
+	#invitation issued by
 	issued_by = models.ForeignKey(
 		'users.User', 
 		on_delete=models.CASCADE, 
 		help_text='Circle member that is providing the invitation',
 		related_name='issued_by')
 
+	#invitation used by
 	used_by = models.ForeignKey(
 		'users.User',
 		on_delete=models.CASCADE,

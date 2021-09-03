@@ -40,72 +40,71 @@ class MembershipModelSerializer(serializers.ModelSerializer):
 		)
 
 
-class AddMemberSerializer(serializers.ModelSerializer):
-	"""Add member serializer.
+class AddMemberSerializer(serializers.Serializer):
+    """Add member serializer.
 
-	Handle the addition of a new member to a circle.
-	Circle object must be provided in the context.
-	"""
+    Handle the addition of a new member to a circle.
+    Circle object must be provided in the context.
+    """
 
-	invitation_code = serializers.CharField(min_length=8)
-	user = serializers.HiddenField(default=serializers.CurrentUserDefault())
+    invitation_code = serializers.CharField(min_length=8)
+    user = serializers.HiddenField(default=serializers.CurrentUserDefault())
 
-	def validate_user(self, data):
-		"""Verify user isn't already a member."""
-		circle = self.context['circle']
-		user = data 
-		q = MemberShip.objects.filter(circle=circle, user=user)
-		if q.exists():
-			raise serializers.ValidationError('User is already member of this circle')
+    def validate_user(self, data):
+        """Verify user isn't already a member."""
+        circle = self.context['circle']
+        user = data
+        q = MemberShip.objects.filter(circle=circle, user=user)
+        if q.exists():
+            raise serializers.ValidationError('User is already member of this circle')
+        return data
 
-	def validate_invitation_code(self, data):
-		"""Verify code exists and that it is related to the circle."""
-		try:
-			invitation = Invitation.objects.get(
+    def validate_invitation_code(self, data):
+        """Verify code exists and that it is related to the circle."""
+        try:
+            invitation = Invitation.objects.get(
+                code=data,
+                circle=self.context['circle'],
+                used=False
+            )
+        except Invitation.DoesNotExist:
+            raise serializers.ValidationError('Invalid invitation code.')
+        self.context['invitation'] = invitation
+        return data
 
-				code=data,
-				circle = self.context['circle'],
-				used=False
+    def validate(self, data):
+        """Verify circle is capable of accepting a new member."""
+        circle = self.context['circle']
+        if circle.is_limited and circle.members.count() >= circle.members_limit:
+            raise serializers.ValidationError('Circle has reached its member limit :(')
+        return data
 
-			)
-		except Invitation.DoesNotExist:
-			raise serializers.ValidationError('Invalid invitation code.')
-		self.context['invitation'] = invitation
-		return data
+    def create(self, data):
+        """Create new circle member."""
+        circle = self.context['circle']
+        invitation = self.context['invitation']
+        user = data['user']
 
-	def validate(self, data):
-		"""Verify circle is capable of accepting a new member."""
-		circle = self.context['circle']
-		if circle.is_limited and circle.members.count() >= circle.members_limit:
-			raise serializers.ValidationError('Circle has reached its member limit')
-		return data
+        now = timezone.now()
 
-	def create(self, data):
-		"""Create new circle member."""
-		circle = self.context['circle']
-		invitation = self.context['invitation']
-		user = data['user']
+        # Member creation
+        member = MemberShip.objects.create(
+            user=user,
+            profile=user.profile,
+            circle=circle,
+            invited_by=invitation.issued_by
+        )
 
-		now = timezone.now()
+        # Update Invitation
+        invitation.used_by = user
+        invitation.used = True
+        invitation.used_at = now
+        invitation.save()
 
-		# Member creation
-		member = MemberShip.objects.create(
-			user=user,
-			profile = user.profile,
-			circle =circle,
-			invited_by = invitation.issued_by
-		)
+        # Update issuer data
+        issuer = MemberShip.objects.get(user=invitation.issued_by, circle=circle)
+        issuer.used_invitations += 1
+        issuer.remaining_invitation -= 1
+        issuer.save()
 
-		# Update Invitation
-		invitation.used_by = user
-		invitation.used = True 
-		invitation.used_at = now
-		invitation.save()
-
-		# Update issuer data
-		issuer = MemberShip.objects.get(user=invitation.issued_by, circle=circles)
-		issuer.used_invitations += 1
-		issuer.remaining_invitation -= 1
-		issuer.save()
-
-		return member
+        return member
